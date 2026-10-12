@@ -26,6 +26,7 @@ jobs:
         with:
           node-version: 22
       - run: npm install
+      - run: npx playwright install --with-deps chromium
       - name: Validate Supabase server key
         env:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -63,16 +64,12 @@ jobs:
           console.error('Formato de chave não reconhecido como Secret Key ou service_role JWT.');
           process.exit(4);
           NODE
-      - name: Sync Korpus
+      - name: Fetch product gallery 613356
         env:
-          KORPUS_BASE_URL: https://korpuslingerie.com.br
-          KORPUS_START_URL: https://korpuslingerie.com.br/pijamas2/
-          KORPUS_PRODUCT_URL: https://korpuslingerie.com.br/produtos/613356-shortdool-bicolor-iris-hnice/
-          SYNC_LIMIT: 1
           SUPABASE_URL: https://uqsvagvtqzacpnphwzkb.supabase.co
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           SUPABASE_BUCKET: korpus-products
-        run: npm run sync
+        run: npm run fetch:613356
       - uses: actions/upload-artifact@v4
         if: always()
         with:
