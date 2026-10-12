@@ -22,17 +22,21 @@ jobs:
         with:
           node-version: 22
       - run: npm install
-      - run: npx playwright install --with-deps chromium
       - name: Validate Supabase server key
         env:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           node - <<'NODE'
-          const key = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+          let key = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+          key = key.trim();
+          if ((key.startsWith('"') && key.endsWith('"')) || (key.startsWith("'") && key.endsWith("'"))) {
+            key = key.slice(1, -1).trim();
+          }
           if (!key) {
             console.error('Secret SUPABASE_SERVICE_ROLE_KEY ausente.');
             process.exit(2);
           }
+          console.log('Tamanho da chave:', key.length);
           if (key.startsWith('sb_secret_')) {
             console.log('Tipo da chave: Supabase Secret Key (server-side).');
             process.exit(0);
@@ -47,11 +51,15 @@ jobs:
                 process.exit(3);
               }
               process.exit(0);
-            } catch {}
+            } catch (e) {
+              console.error('A chave tem formato JWT, mas o payload não pôde ser lido.');
+              process.exit(5);
+            }
           }
           console.error('Formato de chave não reconhecido como Secret Key ou service_role JWT.');
           process.exit(4);
           NODE
+      - run: npx playwright install --with-deps chromium
       - name: Sync Korpus
         env:
           KORPUS_BASE_URL: https://korpuslingerie.com.br
