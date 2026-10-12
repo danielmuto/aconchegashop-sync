@@ -1,6 +1,10 @@
 name: Sync Korpus catalog
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/sync-korpus.yml'
   workflow_dispatch:
     inputs:
       limit:
@@ -63,7 +67,8 @@ jobs:
         env:
           KORPUS_BASE_URL: https://korpuslingerie.com.br
           KORPUS_START_URL: https://korpuslingerie.com.br/pijamas2/
-          SYNC_LIMIT: ${{ inputs.limit || '2' }}
+          KORPUS_PRODUCT_URL: https://korpuslingerie.com.br/produtos/613356-shortdool-bicolor-iris-hnice/
+          SYNC_LIMIT: 1
           SUPABASE_URL: https://uqsvagvtqzacpnphwzkb.supabase.co
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           SUPABASE_BUCKET: korpus-products
