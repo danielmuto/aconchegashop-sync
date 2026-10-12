@@ -218,7 +218,11 @@ async function extractProduct(url) {
   const supplierPrice = (() => {
     const match = String(priceText).match(/\d{1,3}(?:\.\d{3})*,\d{2}|\d+(?:\.\d{2})?/);
     if (!match) return null;
-    const number = Number(match[0].replace(/\./g, '').replace(',', '.'));
+    const raw = match[0];
+    const normalized = raw.includes(',')
+      ? raw.replace(/\./g, '').replace(',', '.')
+      : raw;
+    const number = Number(normalized);
     return Number.isFinite(number) ? number : null;
   })();
 
@@ -289,9 +293,19 @@ async function extractProduct(url) {
     if (value) optionTexts.push(value);
   });
 
-  const sizes = [...new Set(optionTexts.filter((value) =>
-    /^(PP|P|M|G|GG|XG|G1|G2|G3|G4|G\s*PLUS|GG\s*PLUS|PP\s*PLUS|P\s*PLUS|M\s*PLUS|\d{1,3}(?:\/\d{1,3})?)$/i.test(value)
-  ))];
+  const validSize = (value) =>
+    /^(PP|P|M|G|GG|XG|G1|G2|G3|G4|G\s*PLUS|GG\s*PLUS|PP\s*PLUS|P\s*PLUS|M\s*PLUS|\d{1,3}(?:\/\d{1,3})?)$/i.test(value);
+
+  const descriptionSizeMatch = description.match(/Tamanhos?\s*:\s*([^.;|]+)/i);
+  const descriptionSizes = descriptionSizeMatch
+    ? descriptionSizeMatch[1].split(/[,\s]+/).map(clean).filter(validSize)
+    : [];
+
+  const sizes = [...new Set(
+    descriptionSizes.length
+      ? descriptionSizes
+      : optionTexts.filter(validSize)
+  )];
 
   const product = {
     source: 'korpus',
