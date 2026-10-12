@@ -7,6 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const BASE_URL = process.env.KORPUS_BASE_URL || 'https://korpuslingerie.com.br';
 const START_URL = process.env.KORPUS_START_URL || `${BASE_URL}/produtos/`;
+const PRODUCT_URL = process.env.KORPUS_PRODUCT_URL || '';
 const OUT_DIR = path.resolve(process.env.OUT_DIR || 'data');
 const BUCKET = process.env.SUPABASE_BUCKET || 'korpus-products';
 const USER_AGENT = process.env.USER_AGENT ||
@@ -178,6 +179,10 @@ function classifyProduct(name = '', description = '') {
 }
 
 async function collectProductLinks(maxLinks) {
+  if (PRODUCT_URL) {
+    console.log(`Produto direto: ${PRODUCT_URL}`);
+    return [normalizeUrl(PRODUCT_URL)];
+  }
   console.log(`Abrindo catálogo: ${START_URL}`);
   const html = await fetchText(START_URL);
   const $ = cheerio.load(html);
