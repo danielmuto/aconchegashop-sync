@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "sync": "node src/sync.js",
-    "test:extract": "node src/sync.js --limit=2 --no-download"
+    "test:extract": "node src/sync.js --limit=2 --no-download",
+    "fetch:613356": "node src/fetch-613356.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.4",
-    "cheerio": "^1.0.0"
+    "cheerio": "^1.0.0",
+    "playwright": "^1.55.0"
   }
 }
