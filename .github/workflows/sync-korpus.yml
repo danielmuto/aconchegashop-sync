@@ -1,6 +1,10 @@
 name: Sync Korpus catalog
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/sync.js'
   workflow_dispatch:
     inputs:
       limit:
