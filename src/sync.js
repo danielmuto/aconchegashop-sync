@@ -134,6 +134,48 @@ function findProductJsonLd(value) {
   return null;
 }
 
+function normalizedText(value = '') {
+  return String(value)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
+function classifyProduct(name = '', description = '') {
+  const text = normalizedText(`${name} ${description}`);
+
+  if (/gestante|amament|maternidade|materno/.test(text)) {
+    return { category: 'Gestante e Amamentação', slug: 'gestante-amamentacao' };
+  }
+
+  if (/infantil|crianca|menina|menino|kids?|bebe/.test(text)) {
+    return { category: 'Infantil', slug: 'infantil' };
+  }
+
+  if (/pijama|shortdoll|shortdool|camisola|robe|penhoar|baby doll|babydoll/.test(text) &&
+      /masculin|homem|men/.test(text)) {
+    return { category: 'Pijamas Masculinos', slug: 'pijamas-masculinos' };
+  }
+
+  if (/pijama|shortdoll|shortdool|camisola|robe|penhoar|baby doll|babydoll/.test(text)) {
+    return { category: 'Pijamas Femininos', slug: 'pijamas-femininos' };
+  }
+
+  if (/cueca|boxer|samba cancao|masculin/.test(text)) {
+    return { category: 'Moda Íntima Masculina', slug: 'moda-intima-masculina' };
+  }
+
+  if (/sexy|sensual|fetiche|fantasia|plug|vibr|lubrificante|excitante|adulto/.test(text)) {
+    return { category: 'Sexyshop', slug: 'sexyshop' };
+  }
+
+  if (/sutia|calcinha|tanga|lingerie|conjunto|body|cinta|modelador/.test(text)) {
+    return { category: 'Moda Íntima Feminina', slug: 'moda-intima-feminina' };
+  }
+
+  return { category: 'Outros', slug: 'outros' };
+}
+
 async function collectProductLinks(maxLinks) {
   console.log(`Abrindo catálogo: ${START_URL}`);
   const html = await fetchText(START_URL);
@@ -307,13 +349,16 @@ async function extractProduct(url) {
       : optionTexts.filter(validSize)
   )];
 
+  const classification = classifyProduct(name, description);
+
   const product = {
     source: 'korpus',
     source_code: sourceCode,
     source_url: url,
     name,
     description: description || null,
-    category: null,
+    category: classification.category,
+    category_slug: classification.slug,
     supplier_price: supplierPrice,
     sizes,
     colors: [],
@@ -390,7 +435,8 @@ async function uploadImages(productId, product, localFiles) {
 
   for (let i = 0; i < localFiles.length; i++) {
     const file = localFiles[i];
-    const objectPath = `korpus/${folder}/${file.filename}`;
+    const categorySlug = product.category_slug || 'outros';
+    const objectPath = `korpus/${categorySlug}/${folder}/${file.filename}`;
 
     const { error: uploadError } = await supabase.storage
       .from(BUCKET)
@@ -419,6 +465,25 @@ async function uploadImages(productId, product, localFiles) {
   }
 
   if (saved.length) {
+    const legacyPrefix = `korpus/${folder}`;
+    const { data: legacyFiles, error: legacyListError } = await supabase.storage
+      .from(BUCKET)
+      .list(legacyPrefix, { limit: 1000 });
+
+    if (!legacyListError && Array.isArray(legacyFiles) && legacyFiles.length) {
+      const legacyPaths = legacyFiles
+        .filter((item) => item?.name && !item?.id?.endsWith('/'))
+        .map((item) => `${legacyPrefix}/${item.name}`);
+      if (legacyPaths.length) {
+        const { error: legacyRemoveError } = await supabase.storage
+          .from(BUCKET)
+          .remove(legacyPaths);
+        if (legacyRemoveError) {
+          console.warn(`  não foi possível limpar pasta antiga: ${legacyRemoveError.message}`);
+        }
+      }
+    }
+
     const { error: statusError } = await supabase
       .from('products')
       .update({ status: 'ready', updated_at: new Date().toISOString() })
