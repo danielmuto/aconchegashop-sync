@@ -1,0 +1,39 @@
+name: Sync Korpus catalog
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Quantidade máxima de produtos para testar'
+        required: false
+        default: '2'
+  # Ativaremos o agendamento automático depois do primeiro teste real.
+  # schedule:
+  #   - cron: '15 11 * * *'
+  #   - cron: '15 20 * * *'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - run: npx playwright install --with-deps chromium
+      - name: Sync Korpus
+        env:
+          KORPUS_BASE_URL: https://korpuslingerie.com.br
+          SYNC_LIMIT: ${{ inputs.limit || '2' }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_BUCKET: korpus-products
+        run: npm run sync
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: korpus-sync-data
+          path: data/
+          retention-days: 7
