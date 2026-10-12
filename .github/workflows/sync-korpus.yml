@@ -1,10 +1,6 @@
 name: Sync Korpus catalog
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/sync-korpus.yml'
   workflow_dispatch:
     inputs:
       limit:
