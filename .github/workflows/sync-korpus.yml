@@ -1,10 +1,6 @@
 name: Sync Korpus catalog
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/sync-korpus.yml'
   workflow_dispatch:
     inputs:
       limit:
@@ -26,7 +22,6 @@ jobs:
         with:
           node-version: 22
       - run: npm install
-      - run: npx playwright install --with-deps chromium
       - name: Validate Supabase server key
         env:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -64,12 +59,15 @@ jobs:
           console.error('Formato de chave não reconhecido como Secret Key ou service_role JWT.');
           process.exit(4);
           NODE
-      - name: Fetch product gallery 613356
+      - name: Sync Korpus
         env:
+          KORPUS_BASE_URL: https://korpuslingerie.com.br
+          KORPUS_START_URL: https://korpuslingerie.com.br/pijamas2/
+          SYNC_LIMIT: ${{ inputs.limit || '2' }}
           SUPABASE_URL: https://uqsvagvtqzacpnphwzkb.supabase.co
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           SUPABASE_BUCKET: korpus-products
-        run: npm run fetch:613356
+        run: npm run sync
       - uses: actions/upload-artifact@v4
         if: always()
         with:
