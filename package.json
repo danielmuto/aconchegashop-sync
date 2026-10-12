@@ -1,0 +1,14 @@
+{
+  "name": "aconchega-korpus-sync",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sync": "node src/sync.js",
+    "test:extract": "node src/sync.js --limit=2 --no-download"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.4",
+    "playwright": "^1.51.1"
+  }
+}
