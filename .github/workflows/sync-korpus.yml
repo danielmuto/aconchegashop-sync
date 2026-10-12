@@ -27,7 +27,7 @@ jobs:
         env:
           KORPUS_BASE_URL: https://korpuslingerie.com.br
           SYNC_LIMIT: ${{ inputs.limit || '2' }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_URL: https://uqsvagvtqzacpnphwzkb.supabase.co
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           SUPABASE_BUCKET: korpus-products
         run: npm run sync
