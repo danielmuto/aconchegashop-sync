@@ -1,6 +1,10 @@
 name: Sync Korpus catalog
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/sync-korpus.yml'
   workflow_dispatch:
     inputs:
       limit:
@@ -15,7 +19,7 @@ on:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -59,10 +63,10 @@ jobs:
           console.error('Formato de chave não reconhecido como Secret Key ou service_role JWT.');
           process.exit(4);
           NODE
-      - run: npx playwright install --with-deps chromium
       - name: Sync Korpus
         env:
           KORPUS_BASE_URL: https://korpuslingerie.com.br
+          KORPUS_START_URL: https://korpuslingerie.com.br/pijamas2/
           SYNC_LIMIT: ${{ inputs.limit || '2' }}
           SUPABASE_URL: https://uqsvagvtqzacpnphwzkb.supabase.co
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
